@@ -2,6 +2,8 @@ import pygame
 from sys import exit
 from random import randint, choice
 
+# TODO Fix scoring---not saving on end of game screen
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -26,18 +28,21 @@ class Player(pygame.sprite.Sprite):
         self.jump_sound = pygame.mixer.Sound('audio/jump.mp3')
         self.jump_sound.set_volume(0.1)
 
+    # Function to handle input for the player (jumping)
     def player_input(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_SPACE] and self.rect.bottom >= GROUND_HEIGHT:
             self.gravity = -20
             self.jump_sound.play()
 
+    # Function to adjust the player gravity
     def apply_gravity(self):
         self.gravity += 1
         self.rect.y += self.gravity
         if self.rect.bottom >= GROUND_HEIGHT:
             self.rect.bottom = GROUND_HEIGHT
 
+    # Function to animate the player
     def animation_state(self):
         if self.rect.bottom < 300:
             self.image = self.player_jump
@@ -47,6 +52,7 @@ class Player(pygame.sprite.Sprite):
                 self.player_index = 0
             self.image = self.player_walk[int(self.player_index)]
 
+    # Function to call the other methods and update the player
     def update(self):
         self.player_input()
         self.apply_gravity()
@@ -84,12 +90,19 @@ class Obstacle(pygame.sprite.Sprite):
         self.image = self.frames[self.animation_index]
         self.rect = self.image.get_rect(midbottom=(randint(900, 1100), y_pos))
 
+    # Function to animate the obstacle
     def animation_state(self):
         self.animation_index += 0.1
         if self.animation_index >= len(self.frames):
             self.animation_index = 0
         self.image = self.frames[int(self.animation_index)]
 
+    # Function to destroy the obstacle once it moves off screen
+    def destroy(self):
+        if self.rect.x <= -100:
+            self.kill()
+
+    # Function to call the other methods and update the obstacle
     def update(self):
         self.animation_state()
         time_elapsed = pygame.time.get_ticks() - start_time
@@ -97,11 +110,8 @@ class Obstacle(pygame.sprite.Sprite):
         self.rect.x -= 6 + time_elapsed/2000
         self.destroy()
 
-    def destroy(self):
-        if self.rect.x <= -100:
-            self.kill()
 
-
+# Function to display the score and high score on the screen. Returns the elapsed time for the game
 def display_score():
     current_time = int((pygame.time.get_ticks() - start_time)/1000)
     score_surf = test_font.render(f'Score: {current_time}', False, text_color)
@@ -113,13 +123,13 @@ def display_score():
     screen.blit(high_score_surf, high_score_rect)
     return current_time
 
-
+# Function to check for a collision. Returns True if the player has collided with an obstacle
 def collision_check():
     if pygame.sprite.spritecollide(player.sprite, obstacle_group, False):
         obstacle_group.empty()
-        return False
-    else:
         return True
+    else:
+        return False
 
 
 # Game Variables
@@ -157,7 +167,7 @@ player = pygame.sprite.GroupSingle()
 player.add(Player())
 obstacle_group = pygame.sprite.Group()
 
-# Intro screen
+# Intro Screen Graphics
 player_stand = pygame.image.load('graphics/Witch/Stand.png').convert_alpha()
 player_stand = pygame.transform.rotozoom(player_stand, 0, 0.7)
 player_stand_rect = player_stand.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
@@ -168,20 +178,30 @@ game_name_rect = game_name.get_rect(center=(SCREEN_WIDTH/2, 80))
 game_message = test_font.render('Press space to run', False, text_color)
 game_message_rect = game_message.get_rect(center=(SCREEN_WIDTH/2, 340))
 
+score_message = test_font.render(f'Your Score: {score}', False, text_color)
+score_message_rect = score_message.get_rect(center=(SCREEN_WIDTH / 2, 330))
+
+high_score_message = test_font.render(f'High Score: {high_score}', False, text_color)
+high_score_message_rect = score_message.get_rect(center=(SCREEN_WIDTH / 2, 370))
+
 
 while True:
+    # Event Loop--handles game events
     for event in pygame.event.get():
+        # Closing the window ends the game
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
-        else:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not game_active:
-                game_active = True
-                start_time = pygame.time.get_ticks()
+        # Pressing space bar starts the game
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not game_active:
+            game_active = True
+            start_time = pygame.time.get_ticks()
+        # If the game is started, add obstacles
         if game_active:
             if event.type == obstacle_timer and game_active:
                 obstacle_group.add(Obstacle(choice(['bat', 'pumpkin', 'skull'])))
 
+    # What we show if the game is being played
     if game_active:
         # BACKGROUND AND SCORE
         screen.blit(sky_surf, (0, 0))
@@ -196,23 +216,21 @@ while True:
         obstacle_group.update()
 
         # COLLISIONS
-        game_active = collision_check()
+        game_active = not collision_check()
         if score > high_score:
             high_score = score
 
+    # What we show before and after the game is being played
     else:
-        # BACKGROUND AND SCORE/MESSAGE
+        # BACKGROUND AND GAME NAME
         player_gravity = 0
         screen.blit(sky_surf, (0, 0))
-        screen.blit(player_stand, player_stand_rect)
         screen.blit(game_name, game_name_rect)
 
-        score_message = test_font.render(f'Your Score: {score}', False, text_color)
-        score_message_rect = score_message.get_rect(center=(SCREEN_WIDTH / 2, 330))
+        # PLAYER
+        screen.blit(player_stand, player_stand_rect)
 
-        high_score_message = test_font.render(f'High Score: {high_score}', False, text_color)
-        high_score_message_rect = score_message.get_rect(center=(SCREEN_WIDTH / 2, 370))
-
+        # SCORE/MESSAGE
         if score == 0:
             screen.blit(game_message, game_message_rect)
         else:
