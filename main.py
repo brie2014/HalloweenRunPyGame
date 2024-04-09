@@ -2,8 +2,6 @@ import pygame
 from sys import exit
 from random import randint, choice
 
-# TODO Fix scoring---not saving on end of game screen
-
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -123,6 +121,7 @@ def display_score():
     screen.blit(high_score_surf, high_score_rect)
     return current_time
 
+
 # Function to check for a collision. Returns True if the player has collided with an obstacle
 def collision_check():
     if pygame.sprite.spritecollide(player.sprite, obstacle_group, False):
@@ -149,7 +148,6 @@ game_active = False
 start_time = 0
 score = 0
 high_score = 0
-
 
 # Timers
 clock = pygame.time.Clock()
@@ -178,13 +176,6 @@ game_name_rect = game_name.get_rect(center=(SCREEN_WIDTH/2, 80))
 game_message = test_font.render('Press space to run', False, text_color)
 game_message_rect = game_message.get_rect(center=(SCREEN_WIDTH/2, 340))
 
-score_message = test_font.render(f'Your Score: {score}', False, text_color)
-score_message_rect = score_message.get_rect(center=(SCREEN_WIDTH / 2, 330))
-
-high_score_message = test_font.render(f'High Score: {high_score}', False, text_color)
-high_score_message_rect = score_message.get_rect(center=(SCREEN_WIDTH / 2, 370))
-
-
 while True:
     # Event Loop--handles game events
     for event in pygame.event.get():
@@ -199,7 +190,7 @@ while True:
         # If the game is started, add obstacles
         if game_active:
             if event.type == obstacle_timer and game_active:
-                obstacle_group.add(Obstacle(choice(['bat', 'pumpkin', 'skull'])))
+                obstacle_group.add(Obstacle(choice(['bat', 'pumpkin', 'skull', 'skull'])))
 
     # What we show if the game is being played
     if game_active:
@@ -229,6 +220,12 @@ while True:
 
         # PLAYER
         screen.blit(player_stand, player_stand_rect)
+
+        score_message = test_font.render(f'Your Score: {score}', False, text_color)
+        score_message_rect = score_message.get_rect(center=(SCREEN_WIDTH / 2, 330))
+
+        high_score_message = test_font.render(f'High Score: {high_score}', False, text_color)
+        high_score_message_rect = score_message.get_rect(center=(SCREEN_WIDTH / 2, 370))
 
         # SCORE/MESSAGE
         if score == 0:
