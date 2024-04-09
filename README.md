@@ -24,7 +24,7 @@ This Halloween Run quick-play game is built using PyGame, and demonstrates the f
 Use the space bar to jump and avoid obstacles as you run through the creepy forest. 
 See how far you can get before you falter!
 
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video](https://youtu.be/E42AVRTxsRU)
 
 # Development Environment
 
